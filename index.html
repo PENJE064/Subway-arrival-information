@@ -1,102 +1,256 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>지하철 실시간 도착 정보</title>
-    <script>
-        async function fetchStationData() {
-            const stationName = document.getElementById("stationName").value;
-            if (!stationName) {
-                alert("역 이름을 입력해주세요.");
-                return;
-            }
-
-            const response = await fetch("/station_name", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ stationName })
-            });
-
-            if (!response.ok) {
-                alert("데이터를 불러오는 중 오류가 발생했습니다.");
-                return;
-            }
-
-            const data = await response.json();
-            displayData(data);
-        }
-
-        function displayData(data) {
-            const resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = ""; 
-            
-            if (data.length === 0) {
-                resultDiv.innerHTML = "<p>해당 역에 대한 실시간 정보가 없습니다.</p>";
-                return;
-            }
-            
-            const table = document.createElement("table");
-            table.border = "1";
-            const headerRow = table.insertRow();
-            ["지하철 ID", "상하행선", "노선 정보", "역 이름", "도착 시간", "상태", "열차 번호"].forEach(text => {
-                const th = document.createElement("th");
-                th.textContent = text;
-                headerRow.appendChild(th);
-            });
-            
-            data.forEach(item => {
-                const row = table.insertRow();
-                [item.subwayId, item.updnLine, item.trainLineNm, item.stationNm, item.arrivalTime, item.status, item.trainNo].forEach(text => {
-                    const cell = row.insertCell();
-                    cell.textContent = text;
-                });
-            });
-            
-            resultDiv.appendChild(table);
-        }
-        async function fetchStationData() {
-    const stationName = document.getElementById("stationName").value;
-    if (!stationName) {
-        alert("역 이름을 입력해주세요.");
-        return;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>서울 지하철 실시간 도착 정보</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    /* Reset Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    try {
-        const response = await fetch("http://localhost:3000/station_name", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ stationName })
-        });
-
-        console.log("🔄 Response Status:", response.status);
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("🚨 Error Response:", errorText);
-            alert(`❌ 오류 발생: ${errorText}`);
-            return;
-        }
-
-        const data = await response.json();
-        console.log("✅ 서버 응답 데이터:", data);
-        displayData(data);
-    } catch (error) {
-        console.error("⚠️ Fetch Error:", error);
-        alert("요청 중 오류가 발생했습니다.");
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #141414;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-}
 
-    </script>
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      max-width: 900px;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    .station-form {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+
+    .station-form input {
+      padding: 15px;
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 5px;
+      background-color: #333;
+      color: white;
+    }
+
+    .station-form button {
+      padding: 15px;
+      font-size: 1.2rem;
+      background-color: #e50914;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .station-form button:hover {
+      background-color: #f40612;
+    }
+
+    .result-container {
+      background-color: #1f1f1f;
+      border-radius: 10px;
+      width: 100%;
+      padding: 20px;
+    }
+
+    .result {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #333;
+      align-items: center;
+    }
+
+    .result:last-child {
+      border-bottom: none;
+    }
+
+    .result .train-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .result .train-info span {
+      font-size: 1.1rem;
+    }
+
+    .result .arrival-time {
+      font-size: 1.5rem;
+      color: #f5c518;
+      font-weight: bold;
+    }
+
+    /* 역에 대한 이미지 (아이콘) 스타일 */
+    .train-icon {
+      width: 30px;
+      height: 30px;
+      margin-right: 10px;
+      display: inline-block;
+    }
+
+    /* 각 역별 아이콘 */
+    .icon-1호선 {
+      background-color: #0033A0; /* 1호선 색 */
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: inline-block;
+      color: white;
+      text-align: center;
+      line-height: 30px;
+      font-size: 14px;
+    }
+
+    .icon-2호선 {
+      background-color: #00B140; /* 2호선 색 */
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: inline-block;
+      color: white;
+      text-align: center;
+      line-height: 30px;
+      font-size: 14px;
+    }
+
+    .icon-3호선 {
+      background-color: #F4C300; /* 3호선 색 */
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: inline-block;
+      color: white;
+      text-align: center;
+      line-height: 30px;
+      font-size: 14px;
+    }
+
+    /* Loader Styles */
+    .loader {
+      margin-top: 50px;
+      border: 10px solid #f3f3f3;
+      border-top: 10px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+  </style>
 </head>
 <body>
-    <h2>지하철 실시간 도착 정보</h2>
-    <input type="text" id="stationName" placeholder="역 이름 입력">
-    <button onclick="fetchStationData()">검색</button>
-    <div id="result"></div>
+
+  <div class="container">
+    <h1>서울 지하철 실시간 도착 정보</h1>
+
+    <div class="station-form">
+      <input type="text" id="stationName" placeholder="역 이름을 입력하세요" />
+      <button onclick="getStationInfo()">조회하기</button>
+    </div>
+
+    <div class="loader" id="loader" style="display:none;"></div>
+
+    <div id="resultContainer" class="result-container"></div>
+  </div>
+
+  <script>
+    async function getStationInfo() {
+      const stationName = document.getElementById('stationName').value.trim();
+      const resultContainer = document.getElementById('resultContainer');
+      const loader = document.getElementById('loader');
+
+      if (!stationName) {
+        alert('역 이름을 입력해주세요.');
+        return;
+      }
+
+      // Loader 표시
+      loader.style.display = 'block';
+      resultContainer.innerHTML = '';
+
+      try {
+        const response = await fetch('http://localhost:3000/station_name', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stationName })
+        });
+        
+        const data = await response.json();
+        loader.style.display = 'none';
+
+        if (!data || data.length === 0) {
+          resultContainer.innerHTML = '<p>해당 역에 대한 실시간 정보가 없습니다.</p>';
+          return;
+        }
+
+        data.forEach(train => {
+          const arrivalInMinutes = train.arrivalInMinutes;
+          const status = train.status === '진입' ? '진입 중' : '대기';
+          const arrivalTime = arrivalInMinutes <= 0 ? '곧 도착' : `${arrivalInMinutes}분 후 도착`;
+
+          // trainLineNm에서 '-' 기준으로 분리
+          const [lineName, lineType] = train.trainLineNm.split(" - ");
+          const formattedLineName = lineName ? lineName.trim() : '';
+          const formattedLineType = lineType ? lineType.trim() : '';
+
+          // 역별 아이콘을 CSS로 처리
+          let iconClass = '';
+          if (formattedLineName.includes('1호선')) iconClass = 'icon-1호선';
+          else if (formattedLineName.includes('2호선')) iconClass = 'icon-2호선';
+          else if (formattedLineName.includes('3호선')) iconClass = 'icon-3호선';
+          else iconClass = 'icon-1호선';  // 기본값
+
+          const resultHTML = `
+            <div class="result">
+              <div class="train-info">
+                <span class="${iconClass}">${formattedLineName.charAt(0)}</span> <!-- 첫 글자만 아이콘에 표시 -->
+                <span>${formattedLineName} (${formattedLineType})</span>
+                <span>${train.stationNm}</span>
+                <span>${status}</span>
+              </div>
+              <div class="arrival-time">${arrivalTime}</div>
+            </div>
+          `;
+          resultContainer.innerHTML += resultHTML;
+        });
+
+      } catch (err) {
+        loader.style.display = 'none';
+        resultContainer.innerHTML = '<p>에러가 발생했습니다. 잠시 후 다시 시도해주세요.</p>';
+        console.error(err);
+      }
+    }
+  </script>
 </body>
 </html>

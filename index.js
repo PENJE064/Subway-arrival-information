@@ -1,10 +1,17 @@
 const express = require('express');
 const axios = require('axios');
 const xml2js = require('xml2js'); // xml2js를 이용하여 XML 파싱
+const path = require('path');
+const cors = require('cors');
+const moment = require('moment'); // 날짜/시간 관련 라이브러리 추가
+
 const app = express();
 const PORT = 3000;
 
-const cors = require('cors'); 
+// 정적 파일 제공 (public 폴더 내 파일 제공)
+app.use(express.static(path.join(__dirname)));
+
+// CORS 설정
 app.use(cors({
   origin: '*',  // 모든 도메인 허용 (특정 도메인만 허용하려면 여기에 URL 넣기)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // 허용할 메서드
@@ -48,15 +55,24 @@ app.post("/station_name", (req, res) => {
           return res.status(404).send('해당 역에 대한 실시간 정보가 없습니다.');
         }
 
-        const stationData = rows.map(row => ({
-          subwayId: row.subwayId[0],
-          updnLine: row.updnLine[0],
-          trainLineNm: row.trainLineNm[0],
-          stationNm: row.statnNm[0],
-          arrivalTime: row.recptnDt[0],
-          status: row.btrainSttus[0],
-          trainNo: row.btrainNo[0],
-        }));
+        const stationData = rows.map(row => {
+          const arrivalMsg = row.arvlMsg2 ? row.arvlMsg2[0] : "예정 시간이 없습니다."; // arvlMsg2가 있는 경우 사용
+          
+          // 도착 예정 시간이 "10분 후" 같은 형식으로 제공되면 그 값을 그대로 사용할 수 있음
+          const arrivalInMinutes = arrivalMsg.includes("후") 
+            ? parseInt(arrivalMsg.split(" ")[0]) // "10분 후" -> 10 추출
+            : "예정 시간이 없습니다.";  // 예외 처리
+
+          return {
+            subwayId: row.subwayId[0],
+            updnLine: row.updnLine[0],
+            trainLineNm: row.trainLineNm[0],
+            stationNm: row.statnNm[0],
+            arrivalTime: row.recptnDt[0], // 기본 도착 시간
+            status: row.btrainSttus[0],
+            arrivalInMinutes: arrivalInMinutes // 도착 시간 (분 단위)
+          };
+        });
 
         res.json(stationData); // 응답 데이터 전송
       });
