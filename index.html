@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>지하철 실시간 도착 정보</title>
+    <script>
+        async function fetchStationData() {
+            const stationName = document.getElementById("stationName").value;
+            if (!stationName) {
+                alert("역 이름을 입력해주세요.");
+                return;
+            }
+
+            const response = await fetch("/station_name", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ stationName })
+            });
+
+            if (!response.ok) {
+                alert("데이터를 불러오는 중 오류가 발생했습니다.");
+                return;
+            }
+
+            const data = await response.json();
+            displayData(data);
+        }
+
+        function displayData(data) {
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = ""; 
+            
+            if (data.length === 0) {
+                resultDiv.innerHTML = "<p>해당 역에 대한 실시간 정보가 없습니다.</p>";
+                return;
+            }
+            
+            const table = document.createElement("table");
+            table.border = "1";
+            const headerRow = table.insertRow();
+            ["지하철 ID", "상하행선", "노선 정보", "역 이름", "도착 시간", "상태", "열차 번호"].forEach(text => {
+                const th = document.createElement("th");
+                th.textContent = text;
+                headerRow.appendChild(th);
+            });
+            
+            data.forEach(item => {
+                const row = table.insertRow();
+                [item.subwayId, item.updnLine, item.trainLineNm, item.stationNm, item.arrivalTime, item.status, item.trainNo].forEach(text => {
+                    const cell = row.insertCell();
+                    cell.textContent = text;
+                });
+            });
+            
+            resultDiv.appendChild(table);
+        }
+        async function fetchStationData() {
+    const stationName = document.getElementById("stationName").value;
+    if (!stationName) {
+        alert("역 이름을 입력해주세요.");
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost:3000/station_name", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ stationName })
+        });
+
+        console.log("🔄 Response Status:", response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("🚨 Error Response:", errorText);
+            alert(`❌ 오류 발생: ${errorText}`);
+            return;
+        }
+
+        const data = await response.json();
+        console.log("✅ 서버 응답 데이터:", data);
+        displayData(data);
+    } catch (error) {
+        console.error("⚠️ Fetch Error:", error);
+        alert("요청 중 오류가 발생했습니다.");
+    }
+}
+
+    </script>
+</head>
+<body>
+    <h2>지하철 실시간 도착 정보</h2>
+    <input type="text" id="stationName" placeholder="역 이름 입력">
+    <button onclick="fetchStationData()">검색</button>
+    <div id="result"></div>
+</body>
+</html>
