@@ -112,29 +112,6 @@
     .favorites li:hover {
       background-color: #555;
     }
-
-    #resultContainer {
-      margin-top: 20px;
-      width: 100%;
-      max-width: 800px;
-    }
-
-    .train-info {
-      background-color: #222;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      text-align: center;
-      font-size: 1.2rem;
-      font-weight: bold;
-      border: 2px solid #e50914;
-    }
-
-    .highlight {
-      font-weight: bold;
-      padding: 3px 5px;
-      border-radius: 5px;
-    }
   </style>
 </head>
 <body>
@@ -150,65 +127,9 @@
         <ul id="favoritesList"></ul>
       </div>
     </div>
-    <div id="resultContainer"></div>
   </div>
 
   <script>
-    // 호선별 색상 매핑
-    const lineColorMap = {
-      "1호선": "#0033a0",
-      "2호선": "#1b9e77",
-      "3호선": "#e31a1c",
-      "4호선": "#ff7f00",
-      "5호선": "#6a3d9a",
-      "6호선": "#b15928",
-      "7호선": "#ffff00",
-      "8호선": "#33ccff",
-      "9호선": "#ff0099",
-      "신분당선": "#f4d03f"
-    };
-
-    // 해당 호선의 색상을 가져오는 함수
-    function getColorForLine(lineName) {
-      console.log(`호선 이름: ${lineName}`); // 디버깅: 호선 이름이 어떻게 반환되는지 확인
-      return lineColorMap[lineName] || '#888'; // 기본 색상
-    }
-
-    function getStationInfo() {
-      const stationName = document.getElementById('stationName').value.trim();
-      if (!stationName) {
-        alert('역 이름을 입력해주세요.');
-        return;
-      }
-
-      fetch('http://localhost:3000/station_name', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stationName })
-      })
-      .then(response => response.json())
-      .then(data => {
-        const resultContainer = document.getElementById('resultContainer');
-        resultContainer.innerHTML = data.map(train => {
-          console.log(train); // 디버깅: API 응답 데이터를 확인
-          const parts = train.trainLineNm.split(' - '); // trainLineNm을 분리
-          const firstPart = parts[0]; // 첫 번째 호선 추출
-          const restPart = parts.slice(1).join(' - '); // 나머지 부분
-          const highlightColor = getColorForLine(firstPart); // 첫 번째 호선 색상 적용
-          return `
-            <div class="train-info">
-              <span class="highlight" style="background-color: ${highlightColor};">${firstPart}</span>
-              - ${restPart} (${train.arrivalInMinutes}분 후 도착)
-            </div>
-          `;
-        }).join('');
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('정보를 가져오는 중 오류가 발생했습니다.');
-      });
-    }
-
     function addFavorite() {
       const stationName = document.getElementById('stationName').value.trim();
       if (!stationName) {
@@ -232,7 +153,6 @@
         listItem.textContent = stationName;
         listItem.onclick = function() {
           document.getElementById('stationName').value = stationName;
-          getStationInfo();
         };
         favoritesList.appendChild(listItem);
       });

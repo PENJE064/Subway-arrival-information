@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 도착 정보</title>
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script> <!-- Font Awesome 아이콘 사용 -->
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #141414;
+            color: white;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            text-align: center;
+            padding: 20px;
+            width: 300px; /* 고정된 너비 */
+        }
+
+        header {
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        header input {
+            padding: 8px;
+            font-size: 1em;
+            width: 100%; /* 검색창의 너비를 100%로 설정 */
+            margin-right: 10px;
+        }
+
+        header button {
+            padding: 8px 15px;
+            font-size: 1em;
+            background: #e50914;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        header button:hover {
+            background: #b20710;
+        }
+
+        .station-results {
+            margin-top: 20px;
+            width: 100%; /* 결과창의 너비를 100%로 설정 */
+            display: none; /* 결과창 숨김 */
+            flex-direction: column;
+            gap: 15px;
+            text-align: left;
+        }
+
+        .result {
+            background: #333;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+        }
+
+        .train-info h3 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .train-info p {
+            margin: 5px 0;
+        }
+
+        .favoriteBtn {
+            background: #e50914;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            margin-top: 8px;
+            border-radius: 5px;
+        }
+
+        .favoriteBtn:hover {
+            background: #b20710;
+        }
+
+        .favorites {
+            margin-top: 30px;
+            list-style: none;
+            text-align: left;
+            padding: 0;
+            display: none; /* 즐겨찾기 목록 숨기기 */
+        }
+
+        .favorites li {
+            background: #222;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: #222;
+            color: white;
+            width: 300px;
+            padding: 20px;
+            height: 100vh;
+        }
+
+        .sidebar .title {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .sidebar .favorite-list-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.2em;
+            color: white;
+            cursor: pointer;
+        }
+
+        .sidebar .favorite-list-btn:hover {
+            color: #e50914;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="title">실시간 지하철 도착 정보</div>
+        <header>
+            <input type="text" id="stationName" placeholder="역 이름을 입력하세요">
+            <button id="searchBtn">검색</button>
+            <button id="favoriteBtn"><i class="fas fa-heart"></i></button> <!-- 즐겨찾기 아이콘 -->
+        </header>
+
+        <div id="stationResults" class="station-results"></div>
+
+        <button id="favoriteListBtn" class="favorite-list-btn"><i class="fas fa-list-ul"></i> 즐겨찾기 목록</button> <!-- 즐겨찾기 목록 아이콘 -->
+        <ul id="favorites" class="favorites"></ul>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+    <script>
+        const lineColors = {
+            '1호선': '#003478', '2호선': '#009C3B', '3호선': '#F4B300', '4호선': '#9B4D94',
+            '5호선': '#006B8F', '6호선': '#C0A000', '7호선': '#8A3F9F', '8호선': '#D76A14', '9호선': '#A3D9A5'
+        };
+
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const stationName = document.getElementById('stationName').value;
+            if (!stationName) {
+                alert('역 이름을 입력해주세요.');
+                return;
+            }
+
+            axios.post('http://localhost:3000/station_name', { stationName })
+                .then(response => {
+                    const results = response.data;
+                    displayResults(results);
+                })
+                .catch(error => {
+                    alert('에러가 발생했습니다: ' + error.message);
+                });
+        });
+
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('stationResults');
+            resultsContainer.innerHTML = '';
+            resultsContainer.style.display = 'block'; // 결과창 보이게 함
+
+            results.forEach(result => {
+                const div = document.createElement('div');
+                div.classList.add('result');
+                const lineColor = lineColors[result.trainLineNm] || '#000000';
+
+                div.innerHTML = `
+                    <div class="train-info" style="border-left: 5px solid ${lineColor}">
+                        <h3>${result.trainLineNm} (${result.updnLine})</h3>
+                        <p>${result.stationNm}</p>
+                        <p>도착 시간: ${result.arrivalInMinutes === '예정 시간이 없습니다.' ? result.arrivalInMinutes : result.arrivalInMinutes + '분 후'}</p>
+                        <p>Status: ${result.status}</p>
+                    </div>
+                `;
+                resultsContainer.appendChild(div);
+            });
+        }
+
+        // 즐겨찾기 추가 기능
+        document.getElementById('favoriteBtn').addEventListener('click', () => {
+            const stationName = document.getElementById('stationName').value;
+            if (!stationName) {
+                alert('역 이름을 입력해주세요.');
+                return;
+            }
+
+            const listItem = document.createElement('li');
+            listItem.textContent = stationName;
+            document.getElementById('favorites').appendChild(listItem);
+        });
+
+        // 즐겨찾기 목록 보이기/숨기기
+        document.getElementById('favoriteListBtn').addEventListener('click', () => {
+            const favoritesList = document.getElementById('favorites');
+            favoritesList.style.display = favoritesList.style.display === 'block' ? 'none' : 'block';
+        });
+    </script>
+</body>
+</html>
