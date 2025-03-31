@@ -6,7 +6,6 @@
   <title>서울 지하철 실시간 도착 정보</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <style>
-    /* Reset Styles */
     * {
       margin: 0;
       padding: 0;
@@ -39,25 +38,33 @@
       margin-bottom: 20px;
     }
 
+    .search-section {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
     .station-form {
       display: flex;
-      flex-direction: column;
-      width: 100%;
-      margin-bottom: 30px;
+      width: 70%;
+      position: relative;
     }
 
     .station-form input {
-      padding: 15px;
+      flex: 1;
+      padding: 12px;
       font-size: 1.2rem;
-      margin-bottom: 15px;
       border: none;
       border-radius: 5px;
       background-color: #333;
       color: white;
+      margin-right: 10px;
     }
 
     .station-form button {
-      padding: 15px;
+      padding: 12px 15px;
       font-size: 1.2rem;
       background-color: #e50914;
       color: white;
@@ -71,186 +78,169 @@
       background-color: #f40612;
     }
 
-    .result-container {
-      background-color: #1f1f1f;
-      border-radius: 10px;
-      width: 100%;
-      padding: 20px;
-    }
-
-    .result {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px;
-      border-bottom: 1px solid #333;
-      align-items: center;
-    }
-
-    .result:last-child {
-      border-bottom: none;
-    }
-
-    .result .train-info {
-      display: flex;
-      flex-direction: column;
-      text-align: left;
-    }
-
-    .result .train-info span {
-      font-size: 1.1rem;
-    }
-
-    .result .arrival-time {
+    .fav-button {
+      background: gold;
+      border: none;
+      color: black;
       font-size: 1.5rem;
-      color: #f5c518;
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .favorites {
+      background-color: #333;
+      border-radius: 10px;
+      padding: 10px;
+      margin-left: 15px;
+    }
+
+    .favorites ul {
+      list-style-type: none;
+      padding: 0;
+      display: flex;
+      gap: 10px;
+    }
+
+    .favorites li {
+      padding: 5px 10px;
+      background-color: #444;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .favorites li:hover {
+      background-color: #555;
+    }
+
+    #resultContainer {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .train-info {
+      background-color: #222;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      text-align: center;
+      font-size: 1.2rem;
       font-weight: bold;
+      border: 2px solid #e50914;
     }
 
-    /* 역에 대한 이미지 (아이콘) 스타일 */
-    .train-icon {
-      width: 30px;
-      height: 30px;
-      margin-right: 10px;
-      display: inline-block;
+    .highlight {
+      font-weight: bold;
+      padding: 3px 5px;
+      border-radius: 5px;
     }
-
-    /* 각 역별 아이콘 */
-    .icon-1호선 {
-      background-color: #0033A0; /* 1호선 색 */
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      display: inline-block;
-      color: white;
-      text-align: center;
-      line-height: 30px;
-      font-size: 14px;
-    }
-
-    .icon-2호선 {
-      background-color: #00B140; /* 2호선 색 */
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      display: inline-block;
-      color: white;
-      text-align: center;
-      line-height: 30px;
-      font-size: 14px;
-    }
-
-    .icon-3호선 {
-      background-color: #F4C300; /* 3호선 색 */
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      display: inline-block;
-      color: white;
-      text-align: center;
-      line-height: 30px;
-      font-size: 14px;
-    }
-
-    /* Loader Styles */
-    .loader {
-      margin-top: 50px;
-      border: 10px solid #f3f3f3;
-      border-top: 10px solid #3498db;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 2s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
   </style>
 </head>
 <body>
-
   <div class="container">
     <h1>서울 지하철 실시간 도착 정보</h1>
-
-    <div class="station-form">
-      <input type="text" id="stationName" placeholder="역 이름을 입력하세요" />
-      <button onclick="getStationInfo()">조회하기</button>
+    <div class="search-section">
+      <div class="station-form">
+        <input type="text" id="stationName" placeholder="역 이름을 입력하세요" />
+        <button onclick="getStationInfo()">조회</button>
+        <button class="fav-button" onclick="addFavorite()"><i class="fas fa-star"></i></button>
+      </div>
+      <div class="favorites">
+        <ul id="favoritesList"></ul>
+      </div>
     </div>
-
-    <div class="loader" id="loader" style="display:none;"></div>
-
-    <div id="resultContainer" class="result-container"></div>
+    <div id="resultContainer"></div>
   </div>
 
   <script>
-    async function getStationInfo() {
-      const stationName = document.getElementById('stationName').value.trim();
-      const resultContainer = document.getElementById('resultContainer');
-      const loader = document.getElementById('loader');
+    // 호선별 색상 매핑
+    const lineColorMap = {
+      "1호선": "#0033a0",
+      "2호선": "#1b9e77",
+      "3호선": "#e31a1c",
+      "4호선": "#ff7f00",
+      "5호선": "#6a3d9a",
+      "6호선": "#b15928",
+      "7호선": "#ffff00",
+      "8호선": "#33ccff",
+      "9호선": "#ff0099",
+      "신분당선": "#f4d03f"
+    };
 
+    // 해당 호선의 색상을 가져오는 함수
+    function getColorForLine(lineName) {
+      console.log(`호선 이름: ${lineName}`); // 디버깅: 호선 이름이 어떻게 반환되는지 확인
+      return lineColorMap[lineName] || '#888'; // 기본 색상
+    }
+
+    function getStationInfo() {
+      const stationName = document.getElementById('stationName').value.trim();
       if (!stationName) {
         alert('역 이름을 입력해주세요.');
         return;
       }
 
-      // Loader 표시
-      loader.style.display = 'block';
-      resultContainer.innerHTML = '';
-
-      try {
-        const response = await fetch('http://localhost:3000/station_name', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ stationName })
-        });
-        
-        const data = await response.json();
-        loader.style.display = 'none';
-
-        if (!data || data.length === 0) {
-          resultContainer.innerHTML = '<p>해당 역에 대한 실시간 정보가 없습니다.</p>';
-          return;
-        }
-
-        data.forEach(train => {
-          const arrivalInMinutes = train.arrivalInMinutes;
-          const status = train.status === '진입' ? '진입 중' : '대기';
-          const arrivalTime = arrivalInMinutes <= 0 ? '곧 도착' : `${arrivalInMinutes}분 후 도착`;
-
-          // trainLineNm에서 '-' 기준으로 분리
-          const [lineName, lineType] = train.trainLineNm.split(" - ");
-          const formattedLineName = lineName ? lineName.trim() : '';
-          const formattedLineType = lineType ? lineType.trim() : '';
-
-          // 역별 아이콘을 CSS로 처리
-          let iconClass = '';
-          if (formattedLineName.includes('1호선')) iconClass = 'icon-1호선';
-          else if (formattedLineName.includes('2호선')) iconClass = 'icon-2호선';
-          else if (formattedLineName.includes('3호선')) iconClass = 'icon-3호선';
-          else iconClass = 'icon-1호선';  // 기본값
-
-          const resultHTML = `
-            <div class="result">
-              <div class="train-info">
-                <span class="${iconClass}">${formattedLineName.charAt(0)}</span> <!-- 첫 글자만 아이콘에 표시 -->
-                <span>${formattedLineName} (${formattedLineType})</span>
-                <span>${train.stationNm}</span>
-                <span>${status}</span>
-              </div>
-              <div class="arrival-time">${arrivalTime}</div>
+      fetch('http://localhost:3000/station_name', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stationName })
+      })
+      .then(response => response.json())
+      .then(data => {
+        const resultContainer = document.getElementById('resultContainer');
+        resultContainer.innerHTML = data.map(train => {
+          console.log(train); // 디버깅: API 응답 데이터를 확인
+          const parts = train.trainLineNm.split(' - '); // trainLineNm을 분리
+          const firstPart = parts[0]; // 첫 번째 호선 추출
+          const restPart = parts.slice(1).join(' - '); // 나머지 부분
+          const highlightColor = getColorForLine(firstPart); // 첫 번째 호선 색상 적용
+          return `
+            <div class="train-info">
+              <span class="highlight" style="background-color: ${highlightColor};">${firstPart}</span>
+              - ${restPart} (${train.arrivalInMinutes}분 후 도착)
             </div>
           `;
-          resultContainer.innerHTML += resultHTML;
-        });
+        }).join('');
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('정보를 가져오는 중 오류가 발생했습니다.');
+      });
+    }
 
-      } catch (err) {
-        loader.style.display = 'none';
-        resultContainer.innerHTML = '<p>에러가 발생했습니다. 잠시 후 다시 시도해주세요.</p>';
-        console.error(err);
+    function addFavorite() {
+      const stationName = document.getElementById('stationName').value.trim();
+      if (!stationName) {
+        alert('역 이름을 입력해주세요.');
+        return;
+      }
+      let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+      if (!favorites.includes(stationName)) {
+        favorites.push(stationName);
+        localStorage.setItem('favorites', JSON.stringify(favorites));
+        updateFavorites();
       }
     }
+
+    function updateFavorites() {
+      const favoritesList = document.getElementById('favoritesList');
+      favoritesList.innerHTML = '';
+      const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+      favorites.forEach(stationName => {
+        const listItem = document.createElement('li');
+        listItem.textContent = stationName;
+        listItem.onclick = function() {
+          document.getElementById('stationName').value = stationName;
+          getStationInfo();
+        };
+        favoritesList.appendChild(listItem);
+      });
+    }
+
+    window.onload = function() {
+      updateFavorites();
+    };
   </script>
 </body>
 </html>
