@@ -27,6 +27,7 @@
             background: #333;
             padding: 10px;
             border-radius: 8px;
+            position: relative;
         }
         
         #station-input {
@@ -48,6 +49,34 @@
             margin-left: 5px;
         }
 
+        /* 즐겨찾기 목록 스타일 */
+        #favorites {
+            position: absolute;
+            right: -250px;  /* 오른쪽으로 더 많이 이동 */
+            top: 0;
+            width: 170px;
+            background: #333;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* 최근 검색 목록 스타일 */
+        #recent-searches {
+            position: absolute;
+            left: -250px;  /* 왼쪽으로 더 많이 이동 */
+            top: 0;
+            width: 170px;
+            background: #333;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
         /* 결과 출력 부분 */
         #results {
             margin-top: 20px;
@@ -66,16 +95,6 @@
             align-items: center;
         }
 
-        /* 즐겨찾기 목록 스타일 */
-        #favorites {
-            margin-top: 20px;
-            width: 80%;
-            max-width: 600px;
-            background: #333;
-            padding: 15px;
-            border-radius: 8px;
-        }
-
         /* 삭제 버튼 스타일 */
         .delete-btn {
             background: #ff4444;
@@ -90,6 +109,7 @@
         .delete-btn:hover {
             background: #cc0000;
         }
+
     </style>
 </head>
 <body>
@@ -98,13 +118,19 @@
         <input type="text" id="station-input" placeholder="역 이름을 입력하세요">
         <button id="search-btn">검색</button>
         <button id="fav-btn">즐겨찾기 추가</button>
+
+        <!-- 즐겨찾기 목록 -->
+        <div id="favorites"></div>
+
+        <!-- 최근 검색한 역 목록 -->
+        <div id="recent-searches"></div>
     </div>
+
     <div id="results"></div>
-    <h2>즐겨찾기 목록</h2>
-    <div id="favorites"></div>
 
     <script>
         const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+        const recentSearches = JSON.parse(localStorage.getItem('recentSearches')) || [];
 
         document.getElementById('search-btn').addEventListener('click', () => {
             const stationName = document.getElementById('station-input').value;
@@ -113,34 +139,8 @@
                 return;
             }
 
-            fetch('http://localhost:3000/station_name', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ stationName })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('네트워크 응답 오류');
-                }
-                return response.json();
-            })
-            .then(data => {
-                const resultsDiv = document.getElementById('results');
-                resultsDiv.innerHTML = '';
-                data.forEach(train => {
-                    const div = document.createElement('div');
-                    div.className = 'result-item';
-                    div.innerHTML = `
-                        <strong>${train.trainLineNm}</strong><br>
-                        ${train.updnLine} - ${train.arrivalInMinutes}분 후 도착 예정
-                    `;
-                    resultsDiv.appendChild(div);
-                });
-            })
-            .catch(err => {
-                console.error('데이터를 불러오는 중 오류 발생:', err);
-                alert('데이터를 불러오는 중 오류가 발생했습니다.');
-            });
+            updateRecentSearches(stationName);  // 최근 검색에 추가
+            fetchStationData();  // 데이터를 가져오기
         });
 
         document.getElementById('fav-btn').addEventListener('click', () => {
@@ -179,7 +179,66 @@
             }
         }
 
+        function updateRecentSearches(stationName) {
+            if (!recentSearches.includes(stationName)) {
+                recentSearches.push(stationName);
+                if (recentSearches.length > 5) { // 최근 5개만 저장
+                    recentSearches.shift();
+                }
+                localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
+            }
+            displayRecentSearches();
+        }
+
+        function displayRecentSearches() {
+            const recentSearchDiv = document.getElementById('recent-searches');
+            recentSearchDiv.innerHTML = '';
+            recentSearches.forEach(station => {
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                div.innerHTML = `<strong>${station}</strong>`;
+                recentSearchDiv.appendChild(div);
+            });
+        }
+
+        function fetchStationData() {
+            const stationName = document.getElementById('station-input').value;
+            if (!stationName) {
+                alert('역 이름을 입력해주세요!');
+                return;
+            }
+
+            fetch('http://localhost:3000/station_name', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stationName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayStationData(data);
+            })
+            .catch(err => {
+                console.error('데이터를 불러오는 중 오류 발생:', err);
+                alert('데이터를 불러오는 중 오류가 발생했습니다.');
+            });
+        }
+
+        function displayStationData(data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            data.forEach(train => {
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                div.innerHTML = `
+                    <strong>${train.trainLineNm}</strong><br>
+                    ${train.updnLine} - ${train.arrivalInMinutes}분 후 도착 예정
+                `;
+                resultsDiv.appendChild(div);
+            });
+        }
+
         updateFavorites();
+        displayRecentSearches();
     </script>
 </body>
 </html>
