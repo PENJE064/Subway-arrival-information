@@ -17,6 +17,68 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 제목 스타일 */
+        h1 {
+            z-index: 2;
+            position: relative;
+            margin-top: 0;
+        }
+
+        /* 지하철 애니메이션을 위한 스타일 */
+        .train-animation {
+            position: absolute;
+            top: 10%; /* 제목 위로 설정 */
+            width: 200px;
+            height: 60px;
+            background-color: #ff4444; /* 지하철 색상 */
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7); /* 그림자 효과 */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        /* 창문을 위한 스타일 */
+        .train-window {
+            background-color: #333;
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+        }
+
+        /* 왼쪽에서 오른쪽으로 이동하는 애니메이션 */
+        .train-left {
+            left: -250px;
+            animation: moveTrain 5s linear infinite;
+        }
+
+        /* 오른쪽에서 왼쪽으로 이동하는 애니메이션 */
+        .train-right {
+            right: -250px;
+            animation: moveTrainReverse 5s linear infinite;
+        }
+
+        @keyframes moveTrain {
+            0% {
+                left: -250px;
+            }
+            100% {
+                left: 100vw;
+            }
+        }
+
+        @keyframes moveTrainReverse {
+            0% {
+                right: -250px;
+            }
+            100% {
+                right: 100vw;
+            }
         }
 
         /* 검색 바 스타일 (구글 지도 느낌) */
@@ -138,6 +200,18 @@
         <button class="lang-btn" id="lang-jp">JP</button>
         <button class="lang-btn" id="lang-cn">CN</button>
         <button class="lang-btn" id="lang-ko">KO</button>
+    </div>
+
+    <!-- 지하철 애니메이션 요소 -->
+    <div class="train-animation train-left">
+        <div class="train-window"></div>
+        <div class="train-window"></div>
+        <div class="train-window"></div>
+    </div>
+    <div class="train-animation train-right">
+        <div class="train-window"></div>
+        <div class="train-window"></div>
+        <div class="train-window"></div>
     </div>
 
     <div id="search-container">
