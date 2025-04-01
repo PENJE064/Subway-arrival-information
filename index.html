@@ -3,301 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>실시간 도착 정보</title>
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script> <!-- Font Awesome 아이콘 사용 -->
+    <title>실시간 지하철 도착 정보</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
+        /* 배경을 넷플릭스처럼 어두운 테마로 설정 */
         body {
-            font-family: 'Roboto', sans-serif;
-            background: #f4f4f4;
-            color: #333;
-            display: flex;
-            justify-content: center; /* UI 요소를 가운데로 배치 */
-            align-items: flex-start;
-            height: 100vh;
-            width: 100%; /* 화면 전체 너비를 사용 */
-            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #141414;
+            color: white;
             margin: 0;
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 1200px; /* 가로로 더 늘려서 더 넓게 설정 */
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        header {
-            display: flex;
-            gap: 10px; /* 아이콘과 입력칸 사이 간격 */
-            margin-bottom: 15px;
-            flex-wrap: wrap; /* 화면 크기에 맞게 자동 줄바꿈 */
-        }
-
-        header h1 {
-            font-size: 1.5em; /* 제목 크기 축소 */
-            margin-bottom: 10px;
-            color: #e50914;
-            font-weight: bold;
-            width: 100%;
-            text-align: center;
-        }
-
-        header input {
-            padding: 10px;
-            font-size: 0.9em; /* 입력창 크기 축소 */
-            width: calc(100% - 130px); /* 검색창 너비 100%에서 버튼 크기만큼 차감 */
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            outline: none;
-            transition: border 0.3s ease;
-        }
-
-        header input:focus {
-            border: 2px solid #e50914;
-        }
-
-        header button {
-            padding: 10px 0;
-            font-size: 0.9em; /* 버튼 크기 축소 */
-            background: #e50914;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            width: 120px; /* 버튼 크기를 고정시킴 */
-            transition: background-color 0.3s ease;
-        }
-
-        header button:hover {
-            background-color: #b20710;
-        }
-
-        .station-results {
-            margin-top: 15px;
-            display: none; /* 결과창 숨김 */
-            flex-direction: column;
-            gap: 10px;
-            text-align: left;
-        }
-
-        .result {
-            background: #f9f9f9;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            border-left: 5px solid #e50914;
-            transition: transform 0.3s ease;
-        }
-
-        .result:hover {
-            transform: scale(1.05);
-        }
-
-        .train-info h3 {
-            margin-bottom: 8px;
-            font-size: 1.1em;
-            color: #333;
-        }
-
-        .train-info p {
-            margin: 4px 0;
-            color: #555;
-        }
-
-        .favoriteBtn, .favoriteListBtn {
-            background: #e50914;
-            color: white;
-            padding: 12px 0;
-            border: none;
-            cursor: pointer;
-            margin-top: 8px;
-            border-radius: 5px;
-            width: 100%; /* 즐겨찾기 버튼 100%로 설정 */
-            font-size: 1.1em;
-            transition: background-color 0.3s ease;
-        }
-
-        .favoriteBtn:hover, .favoriteListBtn:hover {
-            background: #b20710;
-        }
-
-        .favorites {
-            margin-top: 15px;
-            list-style: none;
-            text-align: left;
             padding: 0;
-            display: block; /* 즐겨찾기 목록 보이도록 수정 */
-            max-height: 200px;
-            overflow-y: auto;
-            background: #ececec; /* 즐겨찾기 목록 배경색 변경 */
-            border-radius: 5px;
-        }
-
-        .favorites li {
-            background: #f9f9f9;
-            padding: 8px;
-            margin-bottom: 6px;
-            border-radius: 5px;
-            border-left: 5px solid #e50914;
-            transition: background-color 0.3s ease;
-        }
-
-        .favorites li:hover {
-            background-color: #e50914;
-            color: white;
-        }
-
-        .sidebar {
-            position: absolute; /* fixed -> absolute로 변경하여 왼쪽으로 위치 */
-            left: 0; /* 왼쪽 화면으로 UI 이동 */
-            top: 0;
-            background: #fff;
-            color: white;
-            width: 350px; /* 왼쪽 영역 너비 설정 */
-            padding: 15px;
-            height: 100vh;
-            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
         }
 
-        .sidebar .title {
-            font-size: 1.5em;
-            margin-bottom: 15px;
-            color: #e50914;
-        }
-
-        .sidebar .action-buttons {
+        /* 검색 바 스타일 (구글 지도 느낌) */
+        #search-container {
+            width: 80%;
+            max-width: 600px;
             display: flex;
-            gap: 8px; /* 아이콘과 버튼 사이 간격 */
-            justify-content: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .sidebar .action-buttons button {
-            padding: 10px 0;
+            background: #333;
+            padding: 10px;
             border-radius: 8px;
+        }
+        
+        #station-input {
+            flex: 1;
+            padding: 10px;
             border: none;
-            background-color: #e50914;
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        #search-btn, #fav-btn {
+            background: red;
             color: white;
-            cursor: pointer;
-            font-size: 1.3em;
-            width: 50%; /* 버튼 너비를 50%로 설정 */
-            transition: background-color 0.3s ease;
-        }
-
-        .sidebar .action-buttons button:hover {
-            background-color: #b20710;
-        }
-
-        .icon {
-            font-size: 1.8em; /* 아이콘 크기 설정 */
-        }
-
-        .sidebar .favorite-list-btn {
-            background: transparent;
             border: none;
-            font-size: 1.4em;
-            color: #e50914;
+            padding: 10px 15px;
+            border-radius: 4px;
             cursor: pointer;
-            width: 50%;
+            font-weight: bold;
+            margin-left: 5px;
         }
 
-        .sidebar .favorite-list-btn:hover {
-            color: #b20710;
+        /* 결과 출력 부분 */
+        #results {
+            margin-top: 20px;
+            width: 80%;
+            max-width: 600px;
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .result-item {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 즐겨찾기 목록 스타일 */
+        #favorites {
+            margin-top: 20px;
+            width: 80%;
+            max-width: 600px;
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        /* 삭제 버튼 스타일 */
+        .delete-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .delete-btn:hover {
+            background: #cc0000;
         }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <div class="title">실시간 지하철 도착 정보</div>
-        <header>
-            <input type="text" id="stationName" placeholder="역 이름을 입력하세요">
-            <button id="searchBtn">검색</button> <!-- 검색 버튼 텍스트로 변경 -->
-            <button id="favoriteBtn">즐겨찾기</button> <!-- 즐겨찾기 버튼 텍스트로 변경 -->
-        </header>
-
-        <!-- 즐겨찾기 목록 버튼을 아래에 추가 -->
-        <button id="favoriteListBtn" class="favorite-list-btn"><i class="fas fa-list-ul icon"></i> 즐겨찾기 목록</button> 
-
-        <ul id="favorites" class="favorites"></ul>
-
-        <div id="stationResults" class="station-results"></div>
+    <h1>실시간 지하철 도착 정보</h1>
+    <div id="search-container">
+        <input type="text" id="station-input" placeholder="역 이름을 입력하세요">
+        <button id="search-btn">검색</button>
+        <button id="fav-btn">즐겨찾기 추가</button>
     </div>
+    <div id="results"></div>
+    <h2>즐겨찾기 목록</h2>
+    <div id="favorites"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
     <script>
-        const lineColors = {
-            '1호선': '#003478', '2호선': '#009C3B', '3호선': '#F4B300', '4호선': '#9B4D94',
-            '5호선': '#006B8F', '6호선': '#C0A000', '7호선': '#8A3F9F', '8호선': '#D76A14', '9호선': '#A3D9A5'
-        };
+        const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
-        document.getElementById('searchBtn').addEventListener('click', () => {
-            const stationName = document.getElementById('stationName').value;
+        document.getElementById('search-btn').addEventListener('click', () => {
+            const stationName = document.getElementById('station-input').value;
             if (!stationName) {
-                alert('역 이름을 입력해주세요.');
+                alert('역 이름을 입력해주세요!');
                 return;
             }
 
-            axios.post('http://localhost:3000/station_name', { stationName })
-                .then(response => {
-                    const results = response.data;
-                    displayResults(results);
-                })
-                .catch(error => {
-                    alert('에러가 발생했습니다: ' + error.message);
+            fetch('http://localhost:3000/station_name', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stationName })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('네트워크 응답 오류');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+                data.forEach(train => {
+                    const div = document.createElement('div');
+                    div.className = 'result-item';
+                    div.innerHTML = `
+                        <strong>${train.trainLineNm}</strong><br>
+                        ${train.updnLine} - ${train.arrivalInMinutes}분 후 도착 예정
+                    `;
+                    resultsDiv.appendChild(div);
                 });
+            })
+            .catch(err => {
+                console.error('데이터를 불러오는 중 오류 발생:', err);
+                alert('데이터를 불러오는 중 오류가 발생했습니다.');
+            });
         });
 
-        function displayResults(results) {
-            const resultsContainer = document.getElementById('stationResults');
-            resultsContainer.innerHTML = '';
-            resultsContainer.style.display = 'block'; // 결과창 보이게 함
+        document.getElementById('fav-btn').addEventListener('click', () => {
+            const stationName = document.getElementById('station-input').value;
+            if (!stationName) {
+                alert('즐겨찾기에 추가할 역 이름을 입력하세요!');
+                return;
+            }
+            if (!favorites.includes(stationName)) {
+                favorites.push(stationName);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                updateFavorites();
+            }
+        });
 
-            results.forEach(result => {
+        function updateFavorites() {
+            const favDiv = document.getElementById('favorites');
+            favDiv.innerHTML = '';
+            favorites.forEach(station => {
                 const div = document.createElement('div');
-                div.classList.add('result');
-                const lineColor = lineColors[result.trainLineNm] || '#000000';
-
+                div.className = 'result-item';
                 div.innerHTML = `
-                    <div class="train-info" style="border-left: 5px solid ${lineColor}">
-                        <h3>${result.trainLineNm} (${result.updnLine})</h3>
-                        <p>${result.stationNm}</p>
-                        <p>도착 시간: ${result.arrivalInMinutes === '예정 시간이 없습니다.' ? result.arrivalInMinutes : result.arrivalInMinutes + '분 후'}</p>
-                        <p>Status: ${result.status}</p>
-                    </div>
+                    <strong>${station}</strong>
+                    <button class="delete-btn" onclick="removeFavorite('${station}')">삭제</button>
                 `;
-                resultsContainer.appendChild(div);
+                favDiv.appendChild(div);
             });
         }
 
-        // 즐겨찾기 추가 기능
-        document.getElementById('favoriteBtn').addEventListener('click', () => {
-            const stationName = document.getElementById('stationName').value;
-            if (!stationName) {
-                alert('역 이름을 입력해주세요.');
-                return;
+        function removeFavorite(station) {
+            const index = favorites.indexOf(station);
+            if (index > -1) {
+                favorites.splice(index, 1);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                updateFavorites();
             }
+        }
 
-            const listItem = document.createElement('li');
-            listItem.textContent = stationName;
-            document.getElementById('favorites').appendChild(listItem);
-        });
-
-        // 즐겨찾기 목록 토글 기능
-        document.getElementById('favoriteListBtn').addEventListener('click', () => {
-            const favoritesList = document.getElementById('favorites');
-            favoritesList.style.display = favoritesList.style.display === 'none' || favoritesList.style.display === '' ? 'block' : 'none';
-        });
+        updateFavorites();
     </script>
 </body>
 </html>
