@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 지하철 도착 정보</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #141414;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            z-index: 2;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .train-container {
+            position: absolute;
+            top: 5%;
+            width: 100%;
+            height: 100px;
+            overflow: hidden;
+        }
+
+        .rail {
+            position: absolute;
+            top: 70px;
+            width: 100%;
+            height: 5px;
+            background-color: gray;
+        }
+
+        .train {
+            position: absolute;
+            width: 200px;
+            height: 60px;
+            background-color: #ff4444;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+        }
+
+        .train-window {
+            background-color: #333;
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+        }
+
+        .train-left {
+            left: -250px;
+            animation: moveTrain 5s linear infinite;
+        }
+
+        .train-right {
+            right: -250px;
+            animation: moveTrainReverse 5s linear infinite;
+        }
+
+        @keyframes moveTrain {
+            0% { left: -250px; }
+            100% { left: 100vw; }
+        }
+
+        @keyframes moveTrainReverse {
+            0% { right: -250px; }
+            100% { right: 100vw; }
+        }
+
+        #search-container {
+            margin-top: 20px;
+            width: 80%;
+            max-width: 600px;
+            display: flex;
+            background: #333;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        #station-input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        #search-btn, #fav-btn {
+            background: red;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .result-item {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .result-item:hover {
+            background: #333;
+        }
+
+        #favorites {
+            margin-top: 10px;
+            width: 80%;
+            max-width: 600px;
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .delete-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* 언어 선택 버튼 */
+        #language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .lang-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="page-title">실시간 지하철 도착 정보</h1>
+
+    <div id="language-selector">
+        <button class="lang-btn" id="lang-ko">KO</button>
+        <button class="lang-btn" id="lang-en">EN</button>
+        <button class="lang-btn" id="lang-jp">JP</button>
+        <button class="lang-btn" id="lang-cn">CN</button>
+    </div>
+
+    <div class="train-container">
+        <div class="rail"></div>
+        <div class="train train-left">
+            <div class="train-window"></div>
+            <div class="train-window"></div>
+            <div class="train-window"></div>
+        </div>
+        <div class="train train-right">
+            <div class="train-window"></div>
+            <div class="train-window"></div>
+            <div class="train-window"></div>
+        </div>
+    </div>
+
+    <div id="search-container">
+        <input type="text" id="station-input" placeholder="역 이름을 입력하세요">
+        <button id="search-btn">검색</button>
+        <button id="fav-btn">즐겨찾기 추가</button>
+    </div>
+
+    <div id="results"></div>
+    <div id="favorites"></div>
+
+    <script>
+        const langData = {
+            ko: { title: "실시간 지하철 도착 정보", placeholder: "역 이름을 입력하세요", search: "검색", favorite: "즐겨찾기 추가", delete: "삭제" },
+            en: { title: "Real-time Subway Arrival Info", placeholder: "Enter station name", search: "Search", favorite: "Add to Favorites", delete: "Delete" },
+            jp: { title: "リアルタイム地下鉄到着情報", placeholder: "駅名を入力してください", search: "検索", favorite: "お気に入りに追加", delete: "削除" },
+            cn: { title: "实时地铁到达信息", placeholder: "请输入站点名称", search: "搜索", favorite: "添加到收藏", delete: "删除" }
+        };
+
+        let currentLang = 'ko';
+        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('page-title').innerText = langData[lang].title;
+            document.getElementById('station-input').placeholder = langData[lang].placeholder;
+            document.getElementById('search-btn').innerText = langData[lang].search;
+            document.getElementById('fav-btn').innerText = langData[lang].favorite;
+            updateFavorites();
+        }
+
+        function updateFavorites() {
+            const favDiv = document.getElementById('favorites');
+            favDiv.innerHTML = '';
+            favorites.forEach(station => {
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                div.innerHTML = `${station} <button class="delete-btn" onclick="removeFavorite('${station}')">${langData[currentLang].delete}</button>`;
+                favDiv.appendChild(div);
+            });
+        }
+
+        function removeFavorite(station) {
+            favorites = favorites.filter(s => s !== station);
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            updateFavorites();
+        }
+
+        document.getElementById('fav-btn').addEventListener('click', () => {
+            const station = document.getElementById('station-input').value.trim();
+            if (!station) return;
+            favorites.push(station);
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            updateFavorites();
+        });
+
+        document.getElementById('lang-ko').addEventListener('click', () => changeLanguage('ko'));
+        document.getElementById('lang-en').addEventListener('click', () => changeLanguage('en'));
+        document.getElementById('lang-jp').addEventListener('click', () => changeLanguage('jp'));
+        document.getElementById('lang-cn').addEventListener('click', () => changeLanguage('cn'));
+
+        changeLanguage('ko');
+    </script>
+</body>
+</html>

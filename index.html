@@ -333,7 +333,7 @@
                 const div = document.createElement('div');
                 div.className = 'result-item';
                 div.innerHTML = `
-                    <strong>${station}</strong>
+                    <strong onclick="selectStationFromList('${station}')">${station}</strong>
                     <button class="delete-btn" onclick="removeFavorite('${station}')">${langData[currentLang].deleteBtn}</button>
                 `;
                 favDiv.appendChild(div);
@@ -366,7 +366,7 @@
             recentSearches.forEach(station => {
                 const div = document.createElement('div');
                 div.className = 'result-item';
-                div.innerHTML = `<strong>${station}</strong>`;
+                div.innerHTML = `<strong onclick="selectStationFromList('${station}')">${station}</strong>`;
                 recentSearchDiv.appendChild(div);
             });
         }
@@ -407,6 +407,10 @@
             });
         }
 
+        function selectStationFromList(stationName) {
+         document.getElementById('station-input').value = stationName; // 검색창에 입력
+            fetchStationData(); // 자동 검색 실행
+        }
         updateFavorites();
         displayRecentSearches();
     </script>
